@@ -1,0 +1,834 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>2 CAHAYA DIGITAL SCORING - Panel Dewan</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/js/all.min.js"></script>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;900&display=swap');
+        body { font-family: 'Montserrat', sans-serif; background-color: #f8fafc; color: #1e293b; margin: 0; height: 100vh; width: 100vw; overflow: hidden; }
+        
+        .screen { display: flex; height: 100vh; width: 100vw; flex-direction: column; background: #f8fafc; padding: 6px; gap: 6px; }
+
+        .btn-raise { transition: all 0.1s; border-bottom-width: 4px !important; position: relative; top: 0; cursor: pointer; }
+        .btn-raise:active { top: 2px !important; border-bottom-width: 1px !important; transform: scale(0.98); }
+        .btn-pressed { top: 3px !important; border-bottom-width: 0px !important; background-color: #fbbf24 !important; color: #000 !important; box-shadow: inset 0 2px 4px rgba(0,0,0,0.2) !important; border-color: #d97706 !important; }
+
+        .btn-compact { padding: 12px 6px; font-size: 14px; font-weight: 800; border-radius: 12px; border: 2px solid #e2e8f0; background: white; display: flex; flex-direction: column; align-items: center; justify-content: center; text-transform: uppercase; line-height: 1.3; gap: 8px; color: #475569; }
+        .btn-compact i { font-size: 28px; }
+
+        .sudut-merah-bg { background-color: #ef4444; color: white; }
+        .sudut-biru-bg { background-color: #3b82f6; color: white; }
+        
+        .leader-glow { box-shadow: 0 0 25px rgba(251, 191, 36, 0.6) !important; border: 4px solid #fbbf24 !important; z-index: 10; transform: scale(1.01); }
+
+        .save-notif { position: fixed; top: 20px; right: 20px; background: #10b981; color: white; padding: 15px 25px; border-radius: 15px; font-weight: bold; transform: translateX(200%); transition: 0.5s; z-index: 60000; box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4); }
+        .save-notif.show { transform: translateX(0); }
+
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.9); z-index: 10000; display: none; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(5px); }
+        .modal-overlay.active { display: flex; }
+        
+        .circle-vote { width: 80px; height: 80px; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; font-weight: 900; color: white; border: 4px solid rgba(0,0,0,0.1); border-bottom-width: 6px; position: relative; top: 0; transition: all 0.2s; font-size: 10px; text-transform: uppercase; }
+        .circle-active { border: 6px solid #1e293b !important; box-shadow: 0 0 25px rgba(0,0,0,0.4); transform: scale(1.1); }
+
+        /* UI Elemen dalam Kotak Nilai */
+        .mon-pen-icon { border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 900; color: rgba(255, 255, 255, 0.7); background: rgba(0, 0, 0, 0.1); padding: 6px 0; transition: all 0.2s; }
+        @media (min-width: 768px) { .mon-pen-icon { font-size: 20px; padding: 10px 0; border-radius: 8px; } }
+        .mon-pen-active-b, .mon-pen-active-m { background-color: #fbbf24 !important; color: #1e293b !important; border-color: #fbbf24 !important; box-shadow: 0 0 10px rgba(251, 191, 36, 0.8); transform: scale(1.05); }
+        
+        .mon-jr-indicator { border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 900; color: rgba(255, 255, 255, 0.7); background: rgba(0, 0, 0, 0.1); padding: 6px 0; transition: all 0.2s; }
+        @media (min-width: 768px) { .mon-jr-indicator { font-size: 16px; padding: 10px 0; border-radius: 8px; } }
+        .mon-jr-active { background: #fbbf24 !important; color: #1e293b !important; border-color: #fbbf24 !important; box-shadow: 0 0 10px rgba(251, 191, 36, 0.8); transform: scale(1.05); }
+
+        .dw-correct-btn, .dw-add-btn { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.3); color: white; font-size: 14px; font-weight: 900; border-radius: 6px; padding: 6px 0; transition: all 0.1s; cursor: pointer; text-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+        @media (min-width: 768px) { .dw-correct-btn, .dw-add-btn { font-size: 22px; padding: 10px 0; border-radius: 8px; } }
+        .dw-correct-btn:active, .dw-add-btn:active { background: #fbbf24 !important; color: #000 !important; transform: scale(0.95); text-shadow: none; border-color: #f59e0b; }
+
+        .juri-lamp { width: 12px; height: 12px; border-radius: 50%; display: inline-block; margin-left: 6px; border: 1px solid rgba(0,0,0,0.1); }
+        .juri-lamp-red { background-color: #ef4444; box-shadow: 0 0 6px #ef4444; }
+        .juri-lamp-green { background-color: #10b981; box-shadow: 0 0 6px #10b981; }
+
+        .avatar-circle { width: 65px; height: 65px; border-radius: 50%; object-fit: cover; border: 3px solid rgba(255,255,255,0.4); background-color: rgba(255,255,255,0.1); flex-shrink: 0; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        @media (min-width: 768px) { .avatar-circle { width: 85px; height: 85px; } }
+
+        .stats-table { width: 100%; text-align: center; border-collapse: collapse; font-size: 12px; font-weight: 800; }
+        @media (min-width: 768px) { .stats-table { font-size: 14px; } }
+        .stats-table th { border: 1px solid #e2e8f0; padding: 12px; background: #f1f5f9; text-transform: uppercase;}
+        .stats-table td { border: 1px solid #e2e8f0; padding: 14px; }
+
+        .tie-table { width: 100%; text-align: center; border-collapse: collapse; font-size: 14px; }
+        .tie-table th { padding: 12px; background: #f1f5f9; border: 1px solid #e2e8f0; text-transform: uppercase; font-weight: 800; }
+        .tie-table td { padding: 14px; border: 1px solid #e2e8f0; font-weight: 700; }
+        .tie-row-blue { background-color: #eff6ff; color: #1e40af; }
+        .tie-row-red { background-color: #fef2f2; color: #991b1b; }
+    </style>
+</head>
+<body>
+
+    <div id="save-ani" class="save-notif"><i class="fas fa-check-circle mr-2"></i> Perintah Terkirim!</div>
+
+    <!-- PANEL DEWAN UTAMA (Tanpa Scroll, Fleksibel) -->
+    <div id="screen-dewan" class="screen">
+        
+        <!-- HEADER BLOCK (Flex-shrink-0) -->
+        <div class="bg-white p-2 md:p-3 rounded-xl shadow-sm border border-slate-200 flex-shrink-0">
+            <div class="flex justify-between items-center mb-2">
+                <div class="flex gap-2">
+                    <button onclick="refreshJuries()" class="bg-rose-100 hover:bg-rose-200 px-5 py-2.5 rounded-lg text-rose-600 shadow-sm text-sm font-black uppercase tracking-widest transition-colors" title="Refresh Juri"><i class="fas fa-sync-alt mr-2"></i> Reset Juri</button>
+                </div>
+                <div class="flex items-center gap-6">
+                    <div class="flex items-center"><span class="text-xs md:text-sm font-black uppercase text-slate-400">J1</span><div id="lamp-j1" class="juri-lamp juri-lamp-red"></div></div>
+                    <div class="flex items-center"><span class="text-xs md:text-sm font-black uppercase text-slate-400">J2</span><div id="lamp-j2" class="juri-lamp juri-lamp-red"></div></div>
+                    <div class="flex items-center"><span class="text-xs md:text-sm font-black uppercase text-slate-400">J3</span><div id="lamp-j3" class="juri-lamp juri-lamp-red"></div></div>
+                </div>
+                <div class="text-right flex flex-col justify-center">
+                    <h1 id="dw-timer-disp" class="text-5xl md:text-6xl font-black text-slate-800 leading-none font-mono tracking-tighter">02:00</h1>
+                    <p id="dw-babak-disp" class="text-sm md:text-lg font-black text-red-600 uppercase tracking-widest mt-1">BABAK 1</p>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-5 gap-2 md:gap-3">
+                <button onclick="finishMatch()" class="btn-raise bg-amber-500 border-amber-700 text-white font-black text-[11px] md:text-[13px] py-3 rounded-lg">FINISH PARTAI</button>
+                <button onclick="nextMatch()" class="btn-raise bg-purple-600 border-purple-800 text-white font-black text-[11px] md:text-[13px] py-3 rounded-lg">NEXT PARTAI</button>
+                <button onclick="openModal('modal-pinalti-dewan')" class="btn-raise bg-red-700 border-red-900 text-white font-black text-[11px] md:text-[13px] py-3 rounded-lg">PINALTI DEWAN</button>
+                <button onclick="openModal('modal-var-type')" class="btn-raise bg-blue-900 border-blue-900 text-white font-black text-[11px] md:text-[13px] py-3 rounded-lg italic"><i class="fas fa-video mr-1"></i> V A R</button>
+                <button onclick="toggleStatsTable()" class="btn-raise bg-emerald-500 border-emerald-600 text-white font-black text-[11px] md:text-[13px] py-3 rounded-lg"><i class="fas fa-chart-bar mr-1"></i> STATS POINT</button>
+            </div>
+        </div>
+
+        <!-- INFO PARTAI (Flex-shrink-0) -->
+        <div class="flex gap-2 flex-shrink-0 mb-1">
+            <div class="flex-1 bg-blue-900 text-white rounded-xl py-2 px-3 flex flex-col justify-center items-center shadow-sm">
+                <span class="text-[9px] md:text-xs text-blue-300 font-bold uppercase tracking-widest mb-0.5">Partai Live</span>
+                <span id="dw-live-detail" class="text-[11px] md:text-base font-black uppercase text-center truncate w-full">---</span>
+            </div>
+            <div class="flex-1 bg-emerald-100 text-emerald-900 border border-emerald-200 rounded-xl py-2 px-3 flex flex-col justify-center items-center shadow-sm">
+                <span class="text-[9px] md:text-xs text-emerald-600 font-bold uppercase tracking-widest mb-0.5">Persiapan</span>
+                <span id="dw-prep-detail" class="text-[11px] md:text-base font-black uppercase text-center truncate w-full">---</span>
+            </div>
+        </div>
+        
+        <!-- KOTAK NILAI UTAMA (Flex-1 min-h-0 agar mengisi ruang tengah secara responsif) -->
+        <div id="dw-scoring-area" class="flex-1 flex gap-2 md:gap-4 min-h-0 overflow-hidden">
+            <!-- Render via JS agar dinamis -->
+        </div>
+        
+        <!-- TOMBOL BAWAH - PINALTI & JATUHAN (Flex-shrink-0) -->
+        <div class="flex-shrink-0 grid grid-cols-2 gap-2 md:gap-4 pb-1">
+            <div class="grid grid-cols-2 gap-2">
+                <button onclick="openPenaltyModal('biru')" class="bg-blue-100 text-blue-700 border-2 border-blue-300 font-black text-xs md:text-sm py-3 md:py-4 rounded-xl uppercase shadow-sm active:scale-95 transition-transform"><i class="fas fa-exclamation-triangle mr-1"></i> Pinalti</button>
+                <button onclick="openJatuhanModal('biru')" class="bg-blue-600 text-white border-2 border-blue-700 font-black text-xs md:text-sm py-3 md:py-4 rounded-xl uppercase shadow-sm active:scale-95 transition-transform"><i class="fas fa-arrow-down mr-1"></i> Jatuhan</button>
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+                <button onclick="openPenaltyModal('merah')" class="bg-red-100 text-red-700 border-2 border-red-300 font-black text-xs md:text-sm py-3 md:py-4 rounded-xl uppercase shadow-sm active:scale-95 transition-transform"><i class="fas fa-exclamation-triangle mr-1"></i> Pinalti</button>
+                <button onclick="openJatuhanModal('merah')" class="bg-red-600 text-white border-2 border-red-700 font-black text-xs md:text-sm py-3 md:py-4 rounded-xl uppercase shadow-sm active:scale-95 transition-transform"><i class="fas fa-arrow-down mr-1"></i> Jatuhan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PINALTI DEWAN (Pilihan UD, WMP, DISK) -->
+    <div id="modal-pinalti-dewan" class="modal-overlay">
+        <div class="bg-white rounded-[3rem] p-8 md:p-10 w-full max-w-sm text-center shadow-2xl">
+            <!-- Menghapus icon palu sesuai permintaan -->
+            <h3 class="font-black text-slate-800 italic text-3xl mb-3">TINDAKAN DEWAN</h3>
+            <p class="font-bold text-slate-500 text-xs mb-8 uppercase tracking-widest">PILIH KEPUTUSAN:</p>
+            <div class="grid grid-cols-1 gap-4">
+                <button onclick="closeModal('modal-pinalti-dewan'); openModal('modal-diskualifikasi')" class="bg-red-600 hover:bg-red-700 text-white py-6 rounded-2xl font-black uppercase text-base shadow-lg transition-colors border-b-4 border-red-800 active:border-b-0 active:translate-y-1">DISKUALIFIKASI (DISK)</button>
+                <button onclick="closeModal('modal-pinalti-dewan'); openModal('modal-ud')" class="bg-slate-800 hover:bg-slate-900 text-white py-6 rounded-2xl font-black uppercase text-base shadow-lg transition-colors border-b-4 border-slate-900 active:border-b-0 active:translate-y-1">UNDUR DIRI (UD)</button>
+                <button onclick="closeModal('modal-pinalti-dewan'); openModal('modal-wmp')" class="bg-pink-600 hover:bg-pink-700 text-white py-6 rounded-2xl font-black uppercase text-base shadow-lg transition-colors border-b-4 border-pink-800 active:border-b-0 active:translate-y-1">W. M. P</button>
+            </div>
+            <button onclick="closeModal('modal-pinalti-dewan')" class="mt-8 text-sm font-black text-slate-400 hover:text-slate-600 uppercase">Batalkan</button>
+        </div>
+    </div>
+
+    <!-- MODAL PINALTI TEKNIS -->
+    <div id="modal-penalty" class="modal-overlay">
+        <div class="bg-white rounded-[2.5rem] p-6 md:p-8 w-full max-w-2xl text-center shadow-2xl relative">
+            <h2 id="modal-penalty-title" class="font-black text-2xl md:text-3xl uppercase italic mb-6">PINALTI</h2>
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <button onclick="handlePenaltyAction('binaan1')" id="mod-pen-binaan1" class="btn-compact btn-raise py-4 shadow-sm"><i class="fas fa-hand-point-left mb-1"></i>Binaan 1</button>
+                <button onclick="handlePenaltyAction('binaan2')" id="mod-pen-binaan2" class="btn-compact btn-raise py-4 shadow-sm"><i class="fas fa-hand-peace rotate-90 mb-1"></i>Binaan 2</button>
+                <button onclick="handlePenaltyAction('teguran1')" id="mod-pen-teguran1" class="btn-compact btn-raise py-4 shadow-sm"><i class="fas fa-hand-point-up mb-1"></i>Teguran 1</button>
+                <button onclick="handlePenaltyAction('teguran2')" id="mod-pen-teguran2" class="btn-compact btn-raise py-4 shadow-sm"><i class="fas fa-hand-peace mb-1"></i>Teguran 2</button>
+                <button onclick="handlePenaltyAction('peringatan1')" id="mod-pen-peringatan1" class="btn-compact btn-raise py-4 text-3xl shadow-sm">1<span class="text-xs mt-1 block font-bold">Peringatan 1</span></button>
+                <button onclick="handlePenaltyAction('peringatan2')" id="mod-pen-peringatan2" class="btn-compact btn-raise py-4 text-3xl shadow-sm">2<span class="text-xs mt-1 block font-bold">Peringatan 2</span></button>
+            </div>
+            <button onclick="closeModal('modal-penalty')" class="w-full bg-slate-800 hover:bg-slate-900 text-white py-4 rounded-xl font-black uppercase text-sm shadow-lg transition-all active:scale-95">Tutup Menu Pinalti</button>
+        </div>
+    </div>
+
+    <!-- MODAL JATUHAN -->
+    <div id="modal-jatuhan" class="modal-overlay">
+        <div class="bg-white rounded-[2.5rem] p-6 md:p-8 w-full max-w-sm text-center shadow-2xl relative">
+            <h2 id="modal-jatuhan-title" class="font-black text-2xl uppercase italic mb-6">JATUHAN</h2>
+            <div class="flex flex-col gap-4">
+                <button onclick="handleJatuhanAction('add')" class="bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xl py-6 rounded-2xl shadow-xl active:scale-95 transition-all">JATUHAN +3</button>
+                <button onclick="handleJatuhanAction('remove')" class="bg-rose-50 text-rose-600 border-4 border-rose-200 hover:bg-rose-100 font-black text-sm py-4 rounded-xl shadow-sm active:scale-95 transition-all uppercase">Anulir Jatuhan -3</button>
+            </div>
+            <button onclick="closeModal('modal-jatuhan')" class="mt-6 text-xs font-black text-slate-400 hover:text-slate-600 uppercase">Batal</button>
+        </div>
+    </div>
+
+    <!-- MODAL STATISTIK POIN DETAIL -->
+    <div id="modal-stats" class="modal-overlay">
+        <div class="bg-white rounded-[2.5rem] p-6 md:p-10 w-full max-w-4xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <h2 class="font-black text-2xl md:text-3xl uppercase italic text-slate-800 mb-6 text-center"><i class="fas fa-chart-bar text-emerald-500 mr-2"></i>Statistik Pertandingan</h2>
+            
+            <div class="overflow-y-auto overflow-x-auto rounded-2xl border-2 border-slate-200 mb-6 shadow-md flex-1">
+                <table class="stats-table w-full">
+                    <thead class="sticky top-0 shadow-sm">
+                        <tr>
+                            <th class="w-1/6">SUDUT</th>
+                            <th class="w-1/4">PARAMETER</th>
+                            <th>BABAK I</th>
+                            <th>BABAK II</th>
+                            <th>BABAK III</th>
+                            <th class="bg-slate-200 text-slate-800">TOTAL</th>
+                        </tr>
+                    </thead>
+                    <tbody id="detailed-stats-body">
+                        <!-- Render via JS -->
+                    </tbody>
+                </table>
+            </div>
+            <button onclick="closeModal('modal-stats')" class="w-full bg-slate-800 hover:bg-slate-900 text-white py-5 rounded-2xl font-black uppercase text-base shadow-lg active:scale-95 transition-all">Tutup Statistik</button>
+        </div>
+    </div>
+
+    <!-- MODAL TIE BREAK RESULT -->
+    <div id="modal-tie-result" class="modal-overlay">
+        <div class="bg-white rounded-[2.5rem] p-6 md:p-8 w-full max-w-lg text-center shadow-2xl overflow-hidden">
+            <h2 class="font-black text-xl md:text-2xl uppercase italic text-slate-800 mb-6">Analisis Skor Seri</h2>
+            <div class="overflow-x-auto mb-6 rounded-xl border-2 border-slate-200 shadow-sm">
+                <table class="tie-table">
+                    <thead>
+                        <tr>
+                            <th>Pesilat</th>
+                            <th>Total Pinalty</th>
+                            <th>Freq Teknis</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tie-table-body"></tbody>
+                </table>
+            </div>
+            <div id="tie-winner-box" class="hidden rounded-2xl p-6 mb-6 text-white shadow-inner">
+                <p class="text-[10px] md:text-xs font-bold uppercase opacity-90 mb-2">Pemenang Otomatis (Tie Break):</p>
+                <h3 id="tie-win-name" class="font-black text-xl md:text-3xl uppercase leading-tight mb-1">NAMA PESERTA</h3>
+                <p id="tie-win-kont" class="text-xs md:text-sm font-bold uppercase italic opacity-90">KONTINGEN</p>
+            </div>
+            <div id="tie-same-notif" class="hidden mb-6 p-4 bg-amber-100 text-amber-800 rounded-2xl font-black text-xs md:text-sm uppercase italic border-2 border-amber-300 shadow-sm">
+                <i class="fas fa-exclamation-triangle mr-2 text-xl mb-1"></i><br>Parameter Sama.<br>Keputusan dikembalikan ke Dewan.
+            </div>
+            <button onclick="closeModal('modal-tie-result')" class="w-full bg-slate-800 hover:bg-slate-900 text-white py-4 rounded-xl font-black uppercase text-sm shadow-lg active:scale-95 transition-all">Tutup Notifikasi</button>
+        </div>
+    </div>
+
+    <!-- MODALS DISKUALIFIKASI, UD, WMP -->
+    <div id="modal-diskualifikasi" class="modal-overlay">
+        <div class="bg-white rounded-[2.5rem] p-8 w-full max-w-md text-center shadow-2xl">
+            <h2 class="font-black text-red-600 text-2xl italic uppercase mb-2"><i class="fas fa-ban mr-2"></i>Diskualifikasi</h2>
+            <p class="font-bold text-slate-500 text-xs uppercase mb-8">Pilih Peserta yang didiskualifikasi:</p>
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="executeDis('biru')" class="sudut-biru-bg hover:bg-blue-600 py-10 rounded-3xl font-black uppercase text-sm shadow-xl active:scale-95 transition-all">SUDUT<br>BIRU</button>
+                <button onclick="executeDis('merah')" class="sudut-merah-bg hover:bg-red-600 py-10 rounded-3xl font-black uppercase text-sm shadow-xl active:scale-95 transition-all">SUDUT<br>MERAH</button>
+            </div>
+            <button onclick="closeModal('modal-diskualifikasi')" class="mt-8 text-xs font-black text-slate-400 hover:text-slate-600 uppercase">Batal</button>
+        </div>
+    </div>
+
+    <div id="modal-ud" class="modal-overlay">
+        <div class="bg-white rounded-[2.5rem] p-8 w-full max-w-md text-center shadow-2xl">
+            <h2 class="font-black text-slate-800 text-2xl italic uppercase mb-2"><i class="fas fa-sign-out-alt mr-2"></i>Undur Diri (UD)</h2>
+            <p class="font-bold text-slate-500 text-xs uppercase mb-8">Pilih Peserta yang Undur Diri:</p>
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="executeUD('biru')" class="sudut-biru-bg hover:bg-blue-600 py-10 rounded-3xl font-black uppercase text-sm shadow-xl active:scale-95 transition-all">SUDUT<br>BIRU</button>
+                <button onclick="executeUD('merah')" class="sudut-merah-bg hover:bg-red-600 py-10 rounded-3xl font-black uppercase text-sm shadow-xl active:scale-95 transition-all">SUDUT<br>MERAH</button>
+            </div>
+            <button onclick="closeModal('modal-ud')" class="mt-8 text-xs font-black text-slate-400 hover:text-slate-600 uppercase">Batal</button>
+        </div>
+    </div>
+
+    <div id="modal-wmp" class="modal-overlay">
+        <div class="bg-white rounded-[2.5rem] p-8 w-full max-w-lg text-center shadow-2xl">
+            <h2 class="font-black text-pink-600 text-2xl italic uppercase mb-2"><i class="fas fa-gavel mr-2"></i>W.M.P</h2>
+            <p class="font-bold text-slate-500 text-xs uppercase mb-8">Wasit Memutuskan Kemenangan Untuk:</p>
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="executeWMP('biru')" class="sudut-biru-bg hover:bg-blue-600 py-8 rounded-3xl font-black uppercase text-sm shadow-xl active:scale-95 transition-all leading-relaxed">MENANG BIRU<br><span class="text-[10px] font-bold opacity-90 mt-1 block">(Merah Lose WMP)</span></button>
+                <button onclick="executeWMP('merah')" class="sudut-merah-bg hover:bg-red-600 py-8 rounded-3xl font-black uppercase text-sm shadow-xl active:scale-95 transition-all leading-relaxed">MENANG MERAH<br><span class="text-[10px] font-bold opacity-90 mt-1 block">(Biru Lose WMP)</span></button>
+            </div>
+            <button onclick="closeModal('modal-wmp')" class="mt-8 text-xs font-black text-slate-400 hover:text-slate-600 uppercase">Batal</button>
+        </div>
+    </div>
+
+    <!-- MODAL VAR RESULT -->
+    <div id="modal-dw-var-result" class="modal-overlay">
+        <div class="bg-white rounded-[3rem] p-8 md:p-12 w-full max-w-2xl text-center shadow-2xl border-[4px] border-yellow-400">
+            <h2 class="text-slate-800 font-black text-2xl md:text-3xl uppercase italic mb-4">Hasil Verifikasi VAR</h2>
+            <div id="dw-var-info-full" class="text-slate-500 text-xs md:text-sm font-bold uppercase mb-6 border-b-2 border-slate-100 pb-4">---</div>
+            <div id="dw-var-auto-box" class="w-full py-6 rounded-2xl mb-10 font-black text-xl md:text-2xl uppercase tracking-widest text-white shadow-xl transition-all bg-slate-100">MENUNGGU JURI...</div>
+            <div class="flex justify-around items-center mb-10">
+                <div class="flex flex-col items-center gap-3"><div id="dw-vote-1" class="circle-vote bg-slate-100 text-2xl shadow-md w-20 h-20">1</div><span class="text-slate-500 font-bold text-[10px] md:text-xs uppercase tracking-widest">JURI 1</span></div>
+                <div class="flex flex-col items-center gap-3"><div id="dw-vote-2" class="circle-vote bg-slate-100 text-2xl shadow-md w-20 h-20">2</div><span class="text-slate-500 font-bold text-[10px] md:text-xs uppercase tracking-widest">JURI 2</span></div>
+                <div class="flex flex-col items-center gap-3"><div id="dw-vote-3" class="circle-vote bg-slate-100 text-2xl shadow-md w-20 h-20">3</div><span class="text-slate-500 font-bold text-[10px] md:text-xs uppercase tracking-widest">JURI 3</span></div>
+            </div>
+            <button onclick="closeVAR()" class="w-full bg-slate-800 hover:bg-slate-900 text-white py-5 rounded-2xl font-black uppercase text-base shadow-xl active:scale-95 transition-all">S E L E S A I</button>
+        </div>
+    </div>
+
+    <div id="modal-var-type" class="modal-overlay">
+        <div class="bg-white rounded-[2.5rem] p-8 md:p-10 w-full max-w-sm text-center shadow-2xl">
+            <h3 class="font-black text-blue-600 italic text-3xl mb-3"><i class="fas fa-video mr-2"></i>V A R</h3>
+            <p class="font-bold text-slate-500 text-xs mb-8 uppercase tracking-widest">PILIH JENIS VERIFIKASI:</p>
+            <div class="grid grid-cols-1 gap-4">
+                <button onclick="startVAR('JATUHAN')" class="bg-slate-800 hover:bg-slate-900 text-white py-6 rounded-2xl font-black uppercase text-base shadow-lg transition-colors">JATUHAN</button>
+                <button onclick="startVAR('PELANGGARAN')" class="bg-slate-800 hover:bg-slate-900 text-white py-6 rounded-2xl font-black uppercase text-base shadow-lg transition-colors">PELANGGARAN</button>
+            </div>
+            <button onclick="closeModal('modal-var-type')" class="mt-8 text-xs font-black text-slate-400 hover:text-slate-600 uppercase">Batal</button>
+        </div>
+    </div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+
+    const firebaseConfig = {
+  apiKey: "AIzaSyDuC-mjc2LiPQ4Ouiq5DBsMPPad-pPb3h0",
+  authDomain: "kejurkot-ambon.firebaseapp.com",
+  databaseURL: "https://kejurkot-ambon-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "kejurkot-ambon",
+  storageBucket: "kejurkot-ambon.firebasestorage.app",
+  messagingSenderId: "545075134619",
+  appId: "1:545075134619:web:ec14b7287c636ebd80063e"
+};
+    const app = initializeApp(firebaseConfig);
+    const database = getDatabase(app);
+    const dbRef = ref(database, 'pencak_scoring_state');
+
+    const INITIAL_STATE = {
+        timer: 120, babak: 1, isRunning: false, idx: 0, bertandingIdx: -1, persiapanIdx: -1,
+        matches: Array.from({length: 1000}, (_, i) => ({ 
+            p: i+1, m: "", b: "", km: "", kb: "", cat: "USIA DINI", kelas: "A", gender: "PUTRA", fase: "PENYISIHAN", status: 'idle', totalM: 0, totalB: 0, winner: "", winnerSide: "",
+            maxBabak: 3, maxTimer: 120, nextP: null, photoB: "", photoM: ""
+        })),
+        merah: { juri: {j1:[0,0,0], j2:[0,0,0], j3:[0,0,0]}, penHistory: [], jat: 0, jatHistory: [], pukulanFreq: 0, tendanganFreq: 0, dis: false, ud: false, wmp: false },
+        biru: { juri: {j1:[0,0,0], j2:[0,0,0], j3:[0,0,0]}, penHistory: [], jat: 0, jatHistory: [], pukulanFreq: 0, tendanganFreq: 0, dis: false, ud: false, wmp: false },
+        buffer: { merah: { v1: {j1:0, j2:0, j3:0}, v2: {j1:0, j2:0, j3:0} }, biru: { v1: {j1:0, j2:0, j3:0}, v2: {j1:0, j2:0, j3:0} } },
+        juriStatus: { j1: false, j2: false, j3: false },
+        var: { active: false, type: '', votes: { j1: '', j2: '', j3: '' } },
+        lastHit: { sudut: '', time: 0, multiple: [], type: 0 }
+    };
+
+    window.state = INITIAL_STATE;
+    window.currentSide = null;
+
+    onValue(dbRef, (snapshot) => {
+        const data = snapshot.val();
+        if (data) { 
+            window.state = data; 
+            updateUI(); 
+            syncModalPenaltyVisuals();
+        } else { 
+            set(dbRef, INITIAL_STATE); 
+        }
+    });
+
+    window.broadcast = function(path = "", value = null) {
+        if (path !== "") { 
+            const specificRef = ref(database, 'pencak_scoring_state/' + path); 
+            set(specificRef, value); 
+        } else { 
+            set(dbRef, window.state); 
+        }
+    }
+
+    window.refreshJuries = function() {
+        if(confirm("Keluarkan semua juri ke menu opsi pemilihan juri?")) {
+            window.broadcast('juriStatus', { j1: false, j2: false, j3: false });
+            showNotif();
+        }
+    }
+
+    window.showNotif = function() { 
+        const n = document.getElementById('save-ani'); 
+        n.classList.add('show'); 
+        setTimeout(() => n.classList.remove('show'), 2000); 
+    }
+
+    window.openModal = function(id) { document.getElementById(id).classList.add('active'); }
+    window.closeModal = function(id) { document.getElementById(id).classList.remove('active'); }
+    
+    window.toggleStatsTable = function() { 
+        openModal('modal-stats');
+    }
+
+    window.openPenaltyModal = function(side) {
+        window.currentSide = side;
+        const titleEl = document.getElementById('modal-penalty-title');
+        titleEl.innerText = "PINALTI SUDUT " + side.toUpperCase();
+        titleEl.className = `font-black text-2xl uppercase italic mb-6 ${side === 'biru' ? 'text-blue-600' : 'text-red-600'}`;
+        openModal('modal-penalty');
+        syncModalPenaltyVisuals();
+    }
+
+    window.openJatuhanModal = function(side) {
+        window.currentSide = side;
+        const titleEl = document.getElementById('modal-jatuhan-title');
+        titleEl.innerText = "JATUHAN SUDUT " + side.toUpperCase();
+        titleEl.className = `font-black text-2xl uppercase italic mb-6 ${side === 'biru' ? 'text-blue-600' : 'text-red-600'}`;
+        openModal('modal-jatuhan');
+    }
+
+    window.handlePenaltyAction = function(type) {
+        applyPenalty(window.currentSide, type);
+    }
+
+    window.handleJatuhanAction = function(action) {
+        if(action === 'add') addJatuhan(window.currentSide);
+        if(action === 'remove') anulirJatuhan(window.currentSide);
+        closeModal('modal-jatuhan');
+    }
+
+    window.syncModalPenaltyVisuals = function() {
+        if(!window.currentSide || !document.getElementById('modal-penalty').classList.contains('active')) return;
+        const hist = window.state[window.currentSide].penHistory || [];
+        const types = ['binaan1', 'binaan2', 'teguran1', 'teguran2', 'peringatan1', 'peringatan2'];
+        
+        types.forEach(t => {
+            const btn = document.getElementById('mod-pen-' + t);
+            if(btn) {
+                const act = t.startsWith('peringatan') ? hist.some(p => p.type === t) : hist.some(p => p.type === t && p.round === window.state.babak);
+                btn.classList.toggle('btn-pressed', act);
+            }
+        });
+    }
+
+    window.calculateTotal = function(s) { 
+        const sc = window.state[s]; 
+        if(sc.dis || sc.ud || sc.wmp) return 0; 
+        const j1T = (sc.juri.j1 || [0,0,0]).reduce((a,b)=>a+b,0), j2T = (sc.juri.j2 || [0,0,0]).reduce((a,b)=>a+b,0), j3T = (sc.juri.j3 || [0,0,0]).reduce((a,b)=>a+b,0); 
+        const sorted = [j1T, j2T, j3T].sort((a,b)=>a-b); 
+        const tot = sorted[1]; 
+        const pMap = { teguran1:1, teguran2:2, peringatan1:5, peringatan2:10 }; 
+        let tp = 0; 
+        (sc.penHistory || []).forEach(i => tp += (pMap[i.type]||0)); 
+        return (tot || 0) + (sc.jat || 0) - tp; 
+    }
+
+    // Fungsi Render HTML Statistik Dinamis per Babak
+    function generateStatsHtml(sideName, sideKey, colorClass, bgClass) {
+        const hist = window.state[sideKey].penHistory || [];
+        const jatHist = window.state[sideKey].jatHistory || [];
+
+        const getCount = (type, round) => {
+            if(type === 'jatuhan') return jatHist.filter(j => j.round === round).length;
+            if(type === 'peringatan') return hist.filter(h => h.type.includes('peringatan') && h.round === round).length;
+            return hist.filter(h => h.type.includes(type) && h.round === round).length;
+        };
+
+        const params = [
+            { id: 'jatuhan', label: 'JATUHAN' },
+            { id: 'binaan', label: 'BINAAN' },
+            { id: 'teguran', label: 'TEGURAN' },
+            { id: 'peringatan', label: 'PERINGATAN' }
+        ];
+
+        let html = '';
+        params.forEach((p, index) => {
+            const r1 = getCount(p.id, 1);
+            const r2 = getCount(p.id, 2);
+            const r3 = getCount(p.id, 3);
+            const tot = r1 + r2 + r3;
+
+            html += `<tr class="${bgClass} ${colorClass} border-b border-slate-200">`;
+            if(index === 0) {
+                html += `<td rowspan="4" class="font-black text-base md:text-xl align-middle border-r border-slate-200 uppercase">${sideName}</td>`;
+            }
+            html += `<td class="font-bold text-left pl-4">${p.label}</td>
+                     <td class="font-black text-lg">${r1}</td>
+                     <td class="font-black text-lg">${r2}</td>
+                     <td class="font-black text-lg">${r3}</td>
+                     <td class="font-black text-xl bg-black/5">${tot}</td>
+                     </tr>`;
+        });
+        return html;
+    }
+
+    window.updateUI = function() {
+        const mb = window.state.bertandingIdx >= 0 ? window.state.matches[window.state.bertandingIdx] : window.state.matches[window.state.idx];
+        const mp = window.state.persiapanIdx >= 0 ? window.state.matches[window.state.persiapanIdx] : null;
+        
+        const tStr = (s) => `${Math.floor(s/60).toString().padStart(2,'0')}:${((s||0)%60).toString().padStart(2,'0')}`;
+        
+        const elTimer = document.getElementById('dw-timer-disp');
+        if(elTimer) elTimer.innerText = tStr(window.state.timer);
+        
+        const elBabak = document.getElementById('dw-babak-disp');
+        if(elBabak) elBabak.innerText = "BABAK " + window.state.babak;
+        
+        if(window.state.juriStatus) { 
+            ['j1', 'j2', 'j3'].forEach(j => { 
+                const el = document.getElementById('lamp-'+j); 
+                if(el) { 
+                    el.classList.toggle('juri-lamp-green', window.state.juriStatus[j]); 
+                    el.classList.toggle('juri-lamp-red', !window.state.juriStatus[j]); 
+                } 
+            }); 
+        }
+        
+        const detailFormat = (p) => { if(!p || (!p.m && !p.b)) return "BELUM ADA DATA"; return `${p.p} / ${p.fase} / ${p.kelas} ${p.cat} ${p.gender}`.toUpperCase(); }
+        if(document.getElementById('dw-live-detail')) document.getElementById('dw-live-detail').innerText = detailFormat(mb);
+        if(document.getElementById('dw-prep-detail')) document.getElementById('dw-prep-detail').innerText = detailFormat(mp);
+
+        let tm = calculateTotal('merah'), tb = calculateTotal('biru');
+        
+        // AUTO WMP DENGAN VALIDASI HANYA DI BABAK 2 ATAU 3
+        let threshold = 30; 
+        const currentCat = (mb.cat || "").toUpperCase();
+        if(currentCat.includes("USIA DINI") || currentCat.includes("PRA REMAJA")) { threshold = 20; }
+        
+        let autoWmpB = false, autoWmpM = false;
+        const pointDiff = Math.abs(tm - tb);
+        
+        // Pengecekan Babak ke-2 atau ke-3 (Babak >= 2)
+        if (window.state.babak >= 2) {
+            if (pointDiff >= threshold) { 
+                if (tm > tb) autoWmpB = true; // Merah unggul jauh -> Biru Auto WMP (Kalah WMP)
+                else if (tb > tm) autoWmpM = true; // Biru unggul jauh -> Merah Auto WMP (Kalah WMP)
+            }
+        }
+        
+        const glowB = (typeof tb === 'number' && typeof tm === 'number') ? (tb > tm ? 'leader-glow' : '') : '';
+        const glowM = (typeof tm === 'number' && typeof tb === 'number') ? (tm > tb ? 'leader-glow' : '') : '';
+        
+        const area = document.getElementById('dw-scoring-area');
+        if(area) {
+            if(mb.status === 'selesai' && mb.winnerSide) { 
+                const isRed = mb.winnerSide === 'merah'; 
+                const isTie = mb.winnerSide === 'tie';
+                const bgClass = isTie ? 'bg-slate-800' : (isRed ? 'sudut-merah-bg' : 'sudut-biru-bg');
+                const winName = isTie ? 'KEPUTUSAN DEWAN' : (isRed ? mb.m : mb.b);
+                const winKont = isTie ? 'SCORE SERI' : (isRed ? mb.km : mb.kb);
+                const winPhoto = isTie ? '' : (isRed ? mb.photoM : mb.photoB);
+                const avWin = winPhoto ? `<img src="${winPhoto}" class="w-32 h-32 md:w-48 md:h-48 rounded-full border-[4px] border-white shadow-xl mb-4 object-cover">` : '';
+                area.innerHTML = `<div class="col-span-full w-full ${bgClass} p-8 md:p-12 rounded-3xl text-center shadow-lg flex flex-col items-center justify-center animate-pulse uppercase h-full"><p class="text-[10px] md:text-sm font-black mb-3 uppercase opacity-90 tracking-widest">PEMENANG PARTAI ${mb.p}</p>${avWin}<h1 class="text-4xl md:text-6xl font-black uppercase leading-tight mb-2 drop-shadow-md">${winName}</h1><h2 class="text-lg md:text-xl font-bold uppercase opacity-90 tracking-widest">${winKont}</h2></div>`; 
+            } else {
+                const valB = window.state.biru.dis ? "DISK" : window.state.biru.ud ? "UD" : (window.state.biru.wmp || autoWmpB) ? "WMP" : tb;
+                const valM = window.state.merah.dis ? "DISK" : window.state.merah.ud ? "UD" : (window.state.merah.wmp || autoWmpM) ? "WMP" : tm;
+                
+                const fsB = ((typeof valB === 'string' && valB.length > 3) ? 'text-3xl md:text-4xl' : (valB === "WMP" ? 'text-5xl md:text-6xl' : 'text-7xl lg:text-[100px] font-mono tracking-tighter'));
+                const fsM = ((typeof valM === 'string' && valM.length > 3) ? 'text-3xl md:text-4xl' : (valM === "WMP" ? 'text-5xl md:text-6xl' : 'text-7xl lg:text-[100px] font-mono tracking-tighter'));
+                
+                const avB = mb.photoB ? `<img src="${mb.photoB}" class="avatar-circle">` : `<div class="avatar-circle flex items-center justify-center text-slate-300 bg-white"><i class="fas fa-user text-4xl md:text-5xl"></i></div>`;
+                const avM = mb.photoM ? `<img src="${mb.photoM}" class="avatar-circle">` : `<div class="avatar-circle flex items-center justify-center text-slate-300 bg-white"><i class="fas fa-user text-4xl md:text-5xl"></i></div>`;
+                
+                area.innerHTML = `
+                <!-- KOTAK BIRU -->
+                <div id="dw-box-b" class="flex-1 sudut-biru-bg p-4 md:p-5 rounded-3xl text-left flex flex-col justify-between border-b-[6px] border-blue-900 shadow-md relative min-h-0 overflow-hidden ${glowB}">
+                    <div class="flex items-center gap-4 uppercase w-full flex-shrink-0">
+                        ${avB}
+                        <div class="overflow-hidden uppercase flex-1 min-w-0">
+                            <p class="text-lg md:text-2xl font-black uppercase truncate text-white leading-tight mb-1 tracking-wide">${mb.b||'BIRU'}</p>
+                            <p class="text-[10px] md:text-sm font-bold opacity-80 uppercase truncate tracking-widest">${mb.kb||'---'}</p>
+                        </div>
+                    </div>
+                    
+                    <div class="text-center my-2 uppercase flex-1 flex items-center justify-center min-h-0">
+                        <h2 class="${fsB} font-black leading-none drop-shadow-lg truncate">${valB}</h2>
+                    </div>
+                    
+                    <div class="flex-shrink-0 flex flex-col gap-3 w-full">
+                        <div class="grid grid-cols-4 gap-2 md:gap-3 w-full">
+                            <button onclick="dwCorrectScore('biru', 1)" class="dw-correct-btn w-full">-1</button>
+                            <button onclick="dwCorrectScore('biru', 2)" class="dw-correct-btn w-full">-2</button>
+                            <button onclick="dwAddScore('biru', 1)" class="dw-add-btn w-full">+1</button>
+                            <button onclick="dwAddScore('biru', 2)" class="dw-add-btn w-full">+2</button>
+                        </div>
+                        
+                        <div class="grid grid-cols-3 gap-2 md:gap-3 w-full">
+                            <div id="dw-b-j1" class="mon-jr-indicator uppercase w-full">J1</div>
+                            <div id="dw-b-j2" class="mon-jr-indicator uppercase w-full">J2</div>
+                            <div id="dw-b-j3" class="mon-jr-indicator uppercase w-full">J3</div>
+                        </div>
+                        
+                        <div class="grid grid-cols-6 gap-2 w-full uppercase">
+                            <div id="dw-pen-b-binaan1" class="mon-pen-icon uppercase w-full"><i class="fas fa-hand-point-left"></i></div>
+                            <div id="dw-pen-b-binaan2" class="mon-pen-icon uppercase w-full"><i class="fas fa-hand-peace rotate-90"></i></div>
+                            <div id="dw-pen-b-teguran1" class="mon-pen-icon uppercase w-full"><i class="fas fa-hand-point-up"></i></div>
+                            <div id="dw-pen-b-teguran2" class="mon-pen-icon uppercase w-full"><i class="fas fa-hand-peace"></i></div>
+                            <div id="dw-pen-b-peringatan1" class="mon-pen-icon uppercase w-full font-black">1</div>
+                            <div id="dw-pen-b-peringatan2" class="mon-pen-icon uppercase w-full font-black">2</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- KOTAK MERAH -->
+                <div id="dw-box-m" class="flex-1 sudut-merah-bg p-4 md:p-5 rounded-3xl text-right flex flex-col justify-between border-b-[6px] border-red-900 shadow-md relative min-h-0 overflow-hidden ${glowM}">
+                    <div class="flex items-center justify-end gap-4 uppercase w-full flex-shrink-0">
+                        <div class="overflow-hidden uppercase flex-1 min-w-0">
+                            <p class="text-lg md:text-2xl font-black uppercase truncate text-white leading-tight mb-1 tracking-wide">${mb.m||'MERAH'}</p>
+                            <p class="text-[10px] md:text-sm font-bold opacity-80 uppercase truncate tracking-widest">${mb.km||'---'}</p>
+                        </div>
+                        ${avM}
+                    </div>
+                    
+                    <div class="text-center my-2 uppercase flex-1 flex items-center justify-center min-h-0">
+                        <h2 class="${fsM} font-black leading-none drop-shadow-lg truncate">${valM}</h2>
+                    </div>
+                    
+                    <div class="flex-shrink-0 flex flex-col gap-3 w-full">
+                        <div class="grid grid-cols-4 gap-2 md:gap-3 w-full">
+                            <button onclick="dwCorrectScore('merah', 1)" class="dw-correct-btn w-full">-1</button>
+                            <button onclick="dwCorrectScore('merah', 2)" class="dw-correct-btn w-full">-2</button>
+                            <button onclick="dwAddScore('merah', 1)" class="dw-add-btn w-full">+1</button>
+                            <button onclick="dwAddScore('merah', 2)" class="dw-add-btn w-full">+2</button>
+                        </div>
+                        
+                        <div class="grid grid-cols-3 gap-2 md:gap-3 w-full">
+                            <div id="dw-m-j1" class="mon-jr-indicator uppercase w-full">J1</div>
+                            <div id="dw-m-j2" class="mon-jr-indicator uppercase w-full">J2</div>
+                            <div id="dw-m-j3" class="mon-jr-indicator uppercase w-full">J3</div>
+                        </div>
+                        
+                        <div class="grid grid-cols-6 gap-2 w-full uppercase">
+                            <div id="dw-pen-m-binaan1" class="mon-pen-icon uppercase w-full"><i class="fas fa-hand-point-right"></i></div>
+                            <div id="dw-pen-m-binaan2" class="mon-pen-icon uppercase w-full"><i class="fas fa-hand-peace rotate-90"></i></div>
+                            <div id="dw-pen-m-teguran1" class="mon-pen-icon uppercase w-full"><i class="fas fa-hand-point-up"></i></div>
+                            <div id="dw-pen-m-teguran2" class="mon-pen-icon uppercase w-full"><i class="fas fa-hand-peace"></i></div>
+                            <div id="dw-pen-m-peringatan1" class="mon-pen-icon uppercase w-full font-black">1</div>
+                            <div id="dw-pen-m-peringatan2" class="mon-pen-icon uppercase w-full font-black">2</div>
+                        </div>
+                    </div>
+                </div>`; 
+            }
+        }
+        
+        ['biru', 'merah'].forEach(s => { 
+            const sPre = s === 'biru' ? 'b-' : 'm-'; 
+            const hist = window.state[s].penHistory || []; 
+            const last = window.state.lastHit || { time: 0, multiple: [], type: 0 }; 
+            const isAct = (last.sudut === s && (Date.now() - last.time < 700)); 
+            [1,2,3].forEach(j => { 
+                const jAct = (isAct && last.multiple.includes('j'+j)); 
+                const el = document.getElementById('dw-'+sPre+'j'+j); 
+                if(el) el.classList.toggle('mon-jr-active', jAct);
+            }); 
+            ['binaan1', 'binaan2', 'teguran1', 'teguran2', 'peringatan1', 'peringatan2'].forEach(p => { 
+                const act = p.startsWith('peringatan') ? hist.some(x => x.type === p) : hist.some(x => x.type === p && x.round === window.state.babak); 
+                const el = document.getElementById(`dw-pen-${sPre}${p}`); 
+                if(el) { 
+                    if(s==='biru') el.classList.toggle('mon-pen-active-b', act); 
+                    else el.classList.toggle('mon-pen-active-m', act); 
+                } 
+            }); 
+        });
+
+        const dv = document.getElementById('modal-dw-var-result'); 
+        if(window.state.var.active) { 
+            dv.classList.add('active'); 
+            document.getElementById('dw-var-info-full').innerText = `VERIFIKASI ${window.state.var.type} - PARTAI ${mb.p}\n${mb.b} VS ${mb.m}`.toUpperCase(); 
+            const votes = window.state.var.votes; 
+            const vArr = [votes.j1, votes.j2, votes.j3].filter(x => x !== ''); 
+            const autoBox = document.getElementById('dw-var-auto-box'); 
+            
+            if (vArr.length === 3) { 
+                const count = { biru: 0, merah: 0, kuning: 0 }; 
+                vArr.forEach(v => count[v]++); 
+                const type = window.state.var.type;
+                if (count.biru >= 2) { autoBox.innerText = `VALID (${type})`; autoBox.className = "w-full py-6 rounded-[2rem] mb-12 font-black text-2xl md:text-3xl uppercase tracking-widest text-white shadow-2xl bg-blue-600"; } 
+                else if (count.merah >= 2) { autoBox.innerText = `VALID (${type})`; autoBox.className = "w-full py-6 rounded-[2rem] mb-12 font-black text-2xl md:text-3xl uppercase tracking-widest text-white shadow-2xl bg-red-600"; } 
+                else if (count.kuning >= 2) { autoBox.innerText = "INVALID / TIDAK SAH"; autoBox.className = "w-full py-6 rounded-[2rem] mb-12 font-black text-2xl md:text-3xl uppercase tracking-widest text-white shadow-2xl bg-yellow-500"; } 
+            } else { 
+                autoBox.innerText = "MENUNGGU JURI..."; autoBox.className = "w-full py-6 rounded-[2rem] mb-12 font-black text-2xl md:text-3xl uppercase tracking-widest text-white shadow-xl bg-slate-800"; 
+            } 
+            ['j1', 'j2', 'j3'].forEach((j, i) => { 
+                const v = window.state.var.votes[j]; 
+                const el = document.getElementById(`dw-vote-${i+1}`); 
+                if(el) { 
+                    el.className = "circle-vote w-20 h-20 text-3xl shadow-md " + (v === 'biru' ? 'bg-blue-600' : v === 'merah' ? 'bg-red-600' : v === 'kuning' ? 'bg-yellow-500' : 'bg-slate-100'); 
+                    if(v) el.classList.add('circle-active'); 
+                    el.innerHTML = v ? '<i class="fas fa-check text-4xl"></i>' : (i+1); 
+                } 
+            }); 
+        } else {
+            if(dv) dv.classList.remove('active');
+        }
+
+        // Render Statistik Dinamis
+        const statsBody = document.getElementById('detailed-stats-body');
+        if(statsBody) {
+            statsBody.innerHTML = 
+                generateStatsHtml('BIRU', 'biru', 'text-blue-700', 'bg-blue-50/50') + 
+                generateStatsHtml('MERAH', 'merah', 'text-red-700', 'bg-red-50/50');
+        }
+
+        if(window.currentSide) {
+            window.syncModalPenaltyVisuals();
+        }
+    }
+
+    window.dwCorrectScore = function(s, v) { 
+        const bi = window.state.babak - 1; 
+        ['j1','j2','j3'].forEach(k => window.broadcast(`${s}/juri/${k}/${bi}`, window.state[s].juri[k][bi]-v)); 
+    }
+    window.dwAddScore = function(s, v) { 
+        const bi = window.state.babak - 1; 
+        ['j1','j2','j3'].forEach(k => window.broadcast(`${s}/juri/${k}/${bi}`, window.state[s].juri[k][bi]+v)); 
+    }
+
+    window.addJatuhan = function(s) { 
+        const currentHist = window.state[s].jatHistory || []; 
+        currentHist.push({ round: window.state.babak, timestamp: Date.now() });
+        window.broadcast(`${s}/jatHistory`, currentHist); 
+        window.broadcast(`${s}/jat`, (window.state[s].jat || 0) + 3); 
+    }
+
+    window.anulirJatuhan = function(s) { 
+        if(window.state[s].jat >= 3) {
+            const currentHist = window.state[s].jatHistory || []; 
+            const idx = currentHist.findLastIndex(x => x.round === window.state.babak);
+            if(idx > -1) { 
+                currentHist.splice(idx, 1); 
+                window.broadcast(`${s}/jatHistory`, currentHist); 
+            }
+            window.broadcast(`${s}/jat`, window.state[s].jat - 3);
+        }
+    }
+
+    window.startVAR = function(t) { 
+        window.broadcast('var', { active: true, type: t, votes: { j1: '', j2: '', j3: '' } }); 
+        closeModal('modal-var-type'); 
+    }
+
+    window.closeVAR = function() { 
+        if(window.state.var.type === 'JATUHAN') { 
+            const count = { biru: 0, merah: 0 }; 
+            Object.values(window.state.var.votes).forEach(v => { if(count[v] !== undefined) count[v]++; }); 
+            if(count.biru >= 2) setTimeout(() => { addJatuhan('biru'); }, 1000); 
+            else if(count.merah >= 2) setTimeout(() => { addJatuhan('merah'); }, 1000); 
+        } 
+        window.broadcast('var/active', false); 
+    }
+
+    window.applyPenalty = function(s, p) { 
+        const cp = [...(window.state[s].penHistory || [])]; 
+        const idx = cp.findIndex(x => x.type === p && x.round === window.state.babak); 
+        (idx > -1) ? cp.splice(idx, 1) : cp.push({ type: p, round: window.state.babak }); 
+        window.broadcast(`${s}/penHistory`, cp); 
+    }
+
+    window.executeDis = function(s) { window.broadcast(`${s}/dis`, true); closeModal('modal-diskualifikasi'); }
+    window.executeUD = function(s) { window.broadcast(`${s}/ud`, true); closeModal('modal-ud'); }
+    window.executeWMP = function(s) { 
+        const ls = (s === 'biru') ? 'merah' : 'biru'; 
+        window.broadcast(`${ls}/wmp`, true); 
+        closeModal('modal-wmp'); 
+    }
+
+    window.finishMatch = function() { 
+        if(confirm("Selesaikan partai ini?")) setMatchStatus(window.state.idx, 'selesai'); 
+    }
+    
+    window.nextMatch = function() { 
+        if(window.state.idx < 999) setMatchStatus(window.state.idx + 1, 'bertanding'); 
+    }
+
+    function processTieBreak(mb, tm, tb) {
+        const penB = (window.state.biru.penHistory || []).length; 
+        const penM = (window.state.merah.penHistory || []).length; 
+        const techB = (window.state.biru.pukulanFreq || 0) + (window.state.biru.tendanganFreq || 0); 
+        const techM = (window.state.merah.pukulanFreq || 0) + (window.state.merah.tendanganFreq || 0); 
+        const tableBody = document.getElementById('tie-table-body'); 
+        tableBody.innerHTML = `<tr class="tie-row-blue uppercase"><td>BIRU</td><td class="font-bold text-xl">${penB}</td><td class="font-bold text-xl">${techB}</td></tr><tr class="tie-row-red uppercase"><td>MERAH</td><td class="font-bold text-xl">${penM}</td><td class="font-bold text-xl">${techM}</td></tr>`; 
+        const winBox = document.getElementById('tie-winner-box'); 
+        const sameNotif = document.getElementById('tie-same-notif'); 
+        winBox.classList.add('hidden'); sameNotif.classList.add('hidden');
+        
+        let winSide = ""; 
+        if (penB < penM) winSide = "biru"; 
+        else if (penM < penB) winSide = "merah"; 
+        else { 
+            if (techB > techM) winSide = "biru"; 
+            else if (techM > techB) winSide = "merah"; 
+            else winSide = "tie"; 
+        }
+        
+        if (winSide === "tie") sameNotif.classList.remove('hidden'); 
+        else { 
+            winBox.classList.remove('hidden', 'sudut-biru-bg', 'sudut-merah-bg'); 
+            winBox.classList.add(winSide === 'biru' ? 'sudut-biru-bg' : 'sudut-merah-bg'); 
+            document.getElementById('tie-win-name').innerText = winSide === 'biru' ? mb.b : mb.m; 
+            document.getElementById('tie-win-kont').innerText = winSide === 'biru' ? mb.kb : mb.km; 
+        }
+        openModal('modal-tie-result'); 
+        return winSide;
+    }
+
+    function propagateWinner(currentMatchIdx) {
+        const m = window.state.matches[currentMatchIdx]; 
+        if (!m.nextP) return; 
+        const nextIdx = m.nextP.p - 1; 
+        const nextMatch = { ...window.state.matches[nextIdx] }; 
+        const winnerName = m.winner; 
+        const winnerKont = (m.winnerSide === 'biru') ? m.kb : m.km; 
+        const winnerPhoto = (m.winnerSide === 'biru') ? m.photoB : m.photoM; 
+        if (m.nextP.side === 'biru') { 
+            nextMatch.b = winnerName; nextMatch.kb = winnerKont; nextMatch.photoB = winnerPhoto; 
+        } else { 
+            nextMatch.m = winnerName; nextMatch.km = winnerKont; nextMatch.photoM = winnerPhoto; 
+        } 
+        const opponent = (m.nextP.side === 'biru') ? nextMatch.m : nextMatch.b; 
+        if (opponent === "BYE" && winnerName !== "BYE") { 
+            nextMatch.status = 'selesai'; 
+            nextMatch.winner = winnerName; 
+            nextMatch.winnerSide = m.nextP.side; 
+            nextMatch.totalB = 0; nextMatch.totalM = 0; 
+            window.broadcast(`matches/${nextIdx}`, nextMatch); 
+            setTimeout(() => propagateWinner(nextIdx), 100); 
+        } else { 
+            window.broadcast(`matches/${nextIdx}`, nextMatch); 
+        }
+    }
+
+    window.setMatchStatus = function(idx, status) { 
+        if(status === 'bertanding') { 
+            if(window.state.bertandingIdx === idx) window.broadcast('bertandingIdx', -1); 
+            else { 
+                window.broadcast('bertandingIdx', idx); 
+                window.broadcast('idx', idx); 
+                window.broadcast('babak', 1); 
+                window.broadcast('isRunning', false); 
+                window.broadcast('merah', INITIAL_STATE.merah); 
+                window.broadcast('biru', INITIAL_STATE.biru); 
+                window.broadcast('buffer', INITIAL_STATE.buffer); 
+                window.broadcast('var', INITIAL_STATE.var); 
+                window.broadcast('timer', window.state.matches[idx].maxTimer); 
+            } 
+        } 
+        else if(status === 'selesai') { 
+            const m = {...window.state.matches[idx]}; 
+            m.status = 'selesai'; 
+            let tm = calculateTotal('merah'), tb = calculateTotal('biru'); 
+            m.totalM = tm; m.totalB = tb; 
+            if (tm === tb) { 
+                const result = processTieBreak(m, tm, tb); 
+                m.winnerSide = result; 
+            } else { 
+                m.winnerSide = (tm > tb) ? 'merah' : 'biru'; 
+            } 
+            if (m.winnerSide !== 'tie') { 
+                m.winner = (m.winnerSide === 'merah') ? m.m : m.b; 
+                window.broadcast(`matches/${idx}`, m); 
+                setTimeout(() => propagateWinner(idx), 200); 
+            } else { 
+                m.winner = "KEPUTUSAN DEWAN"; 
+                window.broadcast(`matches/${idx}`, m); 
+            } 
+        } 
+    }
+
+</script>
+</body>
+</html>
